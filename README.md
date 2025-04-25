@@ -1,124 +1,58 @@
-# Rare Fungi Image Classification with Few-Shot Learning
+# When Does Self-supervision Improve Few-shot Learning?
 
-## Project Overview
+This repo contains the source code of the paper:
 
-This project focuses on the **classification of rare fungi species** using **few-shot learning (FSL)** techniques. Traditional deep learning models struggle with rare species due to extremely limited available images. By applying state-of-the-art **metric-learning based few-shot methods** on the **Danish Fungi 2020 (DF20) dataset**, we aim to overcome the challenges posed by data scarcity and class imbalance in fungi image classification.
+"[When Does Self-supervision Improve Few-shot Learning?](https://arxiv.org/abs/1910.03560)", 
+Jong-Chyi Su, Subhransu Maji, Bharath Hariharan, ECCV, 2020. <br>
 
-Our work experiments with multiple FSL methods, explores the impact of **data augmentation** and **self-supervised learning tasks**, and proposes effective strategies to boost performance in classifying rare fungi species.
+[Project page](https://people.cs.umass.edu/~jcsu/papers/fsl_ssl/), [arXiv](https://arxiv.org/abs/1910.03560), [slides](http://supermoe.cs.umass.edu/fsl_ssl/long_video_slides.pdf)
 
----
+![Combining supervised and self-supervised losses for few-shot learning](figs/overview5.png)
 
-## Key Features
-
-- **Dataset:** Danish Fungi 2020 (DF20)  
-  - 1,604 classes and ~296,000 images
-  - Focused on rare species (classes with fewer than 40 images)
-  
-- **Few-Shot Learning Methods Tested:**  
-  - ProtoNet
-  - RelationNet
-  - CovaMNet
-  - DN4
-  - CAN (Cross Attention Network)
-
-- **Backbone Architectures:**  
-  - ResNet18 (main backbone used)
-  - Conv64F (tested for comparison)
-
-- **Data Augmentation Techniques:**  
-  - Brightness, Contrast, Saturation adjustment
-  - Random Grayscale, Horizontal Flip
-
-- **Self-Supervised Learning Tasks:**  
-  - Jigsaw Puzzle Prediction
-  - Rotation Angle Prediction
-
-- **Experimental Setups:**  
-  - 5-way 5-shot and 20-way 5-shot classification tasks
-  - Testing the effect of individual and combined augmentations
-  - Evaluating the integration of self-supervised tasks into few-shot pipelines
-
----
-
-## Major Results
-
-- **Best Performing Model:**  
-  - **CAN (Cross Attention Network)** + Saturation Augmentation achieved **88.40% Top-1 Accuracy** on 5-way 5-shot tasks.
-
-- **Findings on Augmentation:**  
-  - Simple augmentations (e.g., Horizontal Flip) improved performance, but combining multiple augmentations often degraded results.
-
-- **Findings on Self-Supervised Learning:**  
-  - Self-supervised tasks improved some FSL methods (e.g., RelationNet, CovaMNet) but had mixed results overall.
-  - Choice of the λ (loss weighting) hyperparameter critically influenced performance.
-
----
-
-## How to Use
-
-1. **Clone the Repository:**
-
-```bash
-git clone https://github.com/your-username/rare-fungi-fsl.git
-cd rare-fungi-fsl
-```
-
-2. **Prepare Dataset:**
-   - Obtain the DF20 dataset (publicly available) and organize it according to the required training/validation/testing splits.
-
-3. **Install Requirements:**
-
-```bash
-pip install -r requirements.txt
-```
-
-4. **Train Models:**
-
-```bash
-python train.py --method CAN --backbone resnet18 --augment saturation --fsl_task 5way5shot
-```
-
-5. **Evaluate:**
-
-```bash
-python evaluate.py --checkpoint path/to/checkpoint --fsl_task 5way5shot
-```
-
----
-
-## Directory Structure
-
-```
-.
-├── data/           # DF20 dataset organization
-├── models/         # FSL models (ProtoNet, CAN, etc.)
-├── augmentations/  # Data augmentation implementations
-├── ssl/            # Self-supervised learning modules
-├── train.py        # Training script
-├── evaluate.py     # Evaluation script
-└── README.md       # Project introduction
-```
-
----
+The code is based on [the repo](https://github.com/wyharveychen/CloserLookFewShot) of "A Closer Look at Few-shot Classification", ICLR, 2019.
 
 ## Citation
-
-If you find this work useful, please consider citing:
-
 ```
-@inproceedings{anonymous2025fungiFSL,
-  title={Rare Fungi Image Classification Based on Few-Shot Learning},
-  author={Anonymous},
-  booktitle={IEEE ICME},
-  year={2025}
+@inproceedings{Su2020When,
+	title = {When Does Self-supervision Improve Few-shot Learning?},
+	author = {Jong-Chyi Su and Subhransu Maji and Bharath Hariharan},
+	year = {2020},
+	booktitle = {ECCV}
 }
 ```
 
----
+## Enviroment
+ - Python3
+ - PyTorch (tested on > 1.0.0)
 
-## Acknowledgements
+## Getting started
+### Prepare datasets
+* Please download images of [Caltech-UCSD birds](http://www.vision.caltech.edu/visipedia/CUB-200-2011.html), [Stanford cars](https://ai.stanford.edu/~jkrause/cars/car_dataset.html), [fgvc-aircraft](http://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/), [Stanford dogs](http://vision.stanford.edu/aditya86/ImageNetDogs/), and [Oxford flowers](https://www.robots.ox.ac.uk/~vgg/data/flowers/102/index.html), and put them under `filelists/${dset}/images`.
 
-- Danish Fungi 2020 Dataset
-- LibFewShot Library
-- Previous works on few-shot learning and self-supervised techniques
+### Download mini- and tiered-ImageNet
+* Change directory to `filelists/miniImagenet`
+* run `source download_miniImagenet.sh` 
 
+(WARNING: This would download the 155G ImageNet dataset. You can comment out correponded line 5-6 in `download_miniImagenet.sh` if you already have one.) 
+
+### Base/Val/Novel splits
+* Require three data split json file: 'base.json', 'val.json', 'novel.json' for each dataset.
+* Splits are included in this repo.  
+
+
+## Training (including test after training is done)
+For baseline, run ```python train.py --dataset CUB --train_aug```
+
+For jigsaw, run ```python train.py --dataset CUB --train_aug --jigsaw```
+
+For rotation, run ```python train.py --dataset CUB --train_aug --rotation```
+
+To use a separate unlabeled dataset for SSL, first make a json file for the unlabeled dataset (see original [repo](https://github.com/wyharveychen/CloserLookFewShot) for details).
+Next, set `--dataset_unlabel` and `--base_unlabel` to the name of the json file. For example, to use 20% CUB dataset for supervised training (`CUB/base_20.json`) and 100% CUB for SSL (jigsaw) (`CUB/base.json`), run
+
+```python train_separate.py --dataset CUB --dataset_unlabel CUB --base base_20 --base_unlabel base --jigsaw --lbda 0.5 --lr 0.001 --train_aug --n_query 5 --stop_epoch 600 --bs 64```
+
+Note: For Mini-ImageNet and Tiered-Imagenet, please train the model for 600 epochs. For other datasets, 400 epochs are enough.
+
+## Author
+Jong-Chyi Su (UMass Amherst) `jcsu@cs.umass.edu`
